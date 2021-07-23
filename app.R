@@ -8,7 +8,7 @@ ui <-
       align = "center",
       tags$img(
         src = "logo.png", width = 100,
-        style = "padding-top: 30px;"
+        style = "padding-top: 40px;"
       )
     ),
 
