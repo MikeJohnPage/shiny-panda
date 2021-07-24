@@ -1,4 +1,7 @@
 library(shiny)
+library(tools)
+library(vroom)
+library(readxl)
 
 ui <-
   fluidPage(
@@ -37,14 +40,36 @@ ui <-
     fluidRow(
       align = "center",
       fileInput(
-        inputId = "upload",
-        label = NULL
+        inputId = "file",
+        label = NULL,
+        accept = c(
+          ".csv",
+          ".tsv",
+          ".xls",
+          ".xlsx"
+        )
       )
     )
   )
 
 server <-
   function(input, output, session) {
+    data <-
+      reactive({
+        req(input$file)
+        switch(
+          EXPR = file_ext(input$file$name),
+          csv = vroom(input$file$datapath, delim = ","),
+          tsv = vroom(input$file$datapath, delim = "\t"),
+          xls = read_excel(input$file$datapath),
+          xlsx = read_excel(input$file$datapath)
+        )
+      })
+
+    # Debug data being read in
+    # observe({
+    #   print(data())
+    # })
   }
 
 shinyApp(ui, server)
