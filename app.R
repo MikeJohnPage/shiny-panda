@@ -40,7 +40,7 @@ ui <-
     fluidRow(
       align = "center",
       fileInput(
-        inputId = "file",
+        inputId = "upload",
         label = NULL,
         accept = c(
           ".csv",
@@ -49,6 +49,12 @@ ui <-
           ".xlsx"
         )
       )
+    ),
+
+    # - Download Button -
+    fluidRow(
+      align = "center",
+      downloadButton("download")
     )
   )
 
@@ -56,15 +62,23 @@ server <-
   function(input, output, session) {
     data <-
       reactive({
-        req(input$file)
+        req(input$upload)
         switch(
-          EXPR = file_ext(input$file$name),
-          csv = vroom(input$file$datapath, delim = ","),
-          tsv = vroom(input$file$datapath, delim = "\t"),
-          xls = read_excel(input$file$datapath),
-          xlsx = read_excel(input$file$datapath)
+          EXPR = file_ext(input$upload$name),
+          csv = vroom(input$upload$datapath, delim = ","),
+          tsv = vroom(input$upoad$datapath, delim = "\t"),
+          xls = read_excel(input$upload$datapath),
+          xlsx = read_excel(input$upload$datapath)
         )
       })
+
+      output$download <-
+        downloadHandler(
+          filename = "report.csv",
+          content = function(file){
+            vroom_write(data(), file)
+          }
+        )
 
     # Debug data being read in
     # observe({
