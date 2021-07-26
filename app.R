@@ -1,8 +1,37 @@
+# ---- Load ----
 library(shiny)
 library(tools)
 library(vroom)
 library(readxl)
+library(waiter)
 
+# Note: Do not load reticulate to prevent a default virtual env being set
+
+# ---- Python ----
+# Use virtualenv as it is available on shinyapps.io as a default system package:
+# https://docs.rstudio.com/shinyapps.io/appendix.html#default-system-packages
+
+# Create virtualenv if not available
+if (!(Sys.getenv("VIRTUALENV_NAME") %in% reticulate::virtualenv_list())) {
+  reticulate::virtualenv_create(
+    envname = Sys.getenv("VIRTUALENV_NAME"),
+    python = Sys.getenv("PYTHON_PATH")
+  )
+
+  reticulate::virtualenv_install(
+    Sys.getenv("VIRTUALENV_NAME"),
+    packages = "pandas-profiling",
+    ignore_installed = TRUE
+  )
+}
+
+# Load virtualenv
+reticulate::use_virtualenv(
+  Sys.getenv("VIRTUALENV_NAME"),
+  required = TRUE
+)
+
+# ---- UI ----
 ui <-
   fluidPage(
 
@@ -58,8 +87,10 @@ ui <-
     )
   )
 
+# ---- Server ----
 server <-
   function(input, output, session) {
+    
     data <-
       reactive({
         req(input$upload)
@@ -72,18 +103,28 @@ server <-
         )
       })
 
-      output$download <-
-        downloadHandler(
-          filename = "report.csv",
-          content = function(file){
-            vroom_write(data(), file)
-          }
-        )
+    output$download <-
+      downloadHandler(
+        filename = "report.html",
+        content = function(file) {
+          
+          # - Generate Pandas Profiling report -
+          pandas_profiling <-
+            reticulate::import(
+              "pandas_profiling",
+              convert = FALSE
+            )
 
-    # Debug data being read in
-    # observe({
-    #   print(data())
-    # })
+          profile <-
+            pandas_profiling$ProfileReport(
+              data(),
+              title = "Pandas Profiling Report"
+            )
+
+          profile$to_file(file)
+        }
+      )
   }
 
+# ---- Run App ----
 shinyApp(ui, server)
