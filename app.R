@@ -3,7 +3,7 @@ library(shiny)
 library(tools)
 library(vroom)
 library(readxl)
-library(waiter)
+library(shinybusy)
 
 # Note: Do not load reticulate to prevent a default virtual env being set
 
@@ -35,12 +35,49 @@ reticulate::use_virtualenv(
 ui <-
   fluidPage(
 
-    # - Logo -
+    # - Logos -
     fluidRow(
       align = "center",
-      tags$img(
-        src = "logo.png", width = 100,
-        style = "padding-top: 40px;"
+
+      # - MikeJohnPage -
+      column(
+        width = 4,
+        align = "center",
+        tags$a(
+          href = "https://mikejohnpage.com",
+          target = "_blank",
+          tags$img(
+            src = "mikejohnpage.png",
+            width = 200,
+            style = "padding-top: 30px;"
+          )
+        )
+      ),
+
+      # - Shiny Panda -
+      column(
+        width = 4,
+        align = "center",
+        tags$img(
+          src = "logo.png",
+          width = 100,
+          style = "padding-top: 30px; padding-bottom: 30px"
+        )
+      ),
+
+      # - GitHub -
+      column(
+        width = 4,
+        align = "center",
+        tags$a(
+          href = "https://github.com/mikejohnpage/shiny-panda",
+          target = "_blank",
+          tags$img(
+            src = "github.png",
+            width = 30,
+            style = "padding-top: 50px;"
+          )
+        )
       )
     ),
 
@@ -48,7 +85,7 @@ ui <-
     fluidRow(
       align = "center",
       tags$h1(
-        style = "padding-top: 10px; padding-bottom: 10px;",
+        style = "font-size: 75px; padding-top: 60px; padding-bottom: 5px;",
         "Shiny Panda"
       )
     ),
@@ -56,12 +93,9 @@ ui <-
     # - Instructions -
     fluidRow(
       align = "center",
-      tags$p(
-        style = "padding-bottom: 20px;",
-        "Shiny Panda allows you to generate Pandas Profiling reports online.",
-        tags$br(),
-        "Simply upload your file, and a report will automatically download when
-        ready."
+      tags$h2(
+        style = "padding-top: 0px; padding-bottom: 50px; padding-left: 10px; padding-right: 10px",
+        "Upload a file. Get back a Pandas Profiling report."
       )
     ),
 
@@ -90,7 +124,6 @@ ui <-
 # ---- Server ----
 server <-
   function(input, output, session) {
-    
     data <-
       reactive({
         req(input$upload)
@@ -107,7 +140,13 @@ server <-
       downloadHandler(
         filename = "report.html",
         content = function(file) {
-          
+          show_modal_gif(
+            src = "loading.gif",
+            text = "Generating report, this could take a while...",
+            height = "270px",
+            width = "270px"
+          )
+
           # - Generate Pandas Profiling report -
           pandas_profiling <-
             reticulate::import(
@@ -122,6 +161,8 @@ server <-
             )
 
           profile$to_file(file)
+
+          remove_modal_gif()
         }
       )
   }
