@@ -4,6 +4,9 @@ library(tools)
 library(vroom)
 library(readxl)
 library(shinybusy)
+library(shinyjs)
+
+source(".Rprofile")
 
 # Note: Do not load reticulate to prevent a default virtual env being set
 
@@ -34,6 +37,7 @@ reticulate::use_virtualenv(
 # ---- UI ----
 ui <-
   fluidPage(
+    useShinyjs(),
 
     # - Logos -
     fluidRow(
@@ -54,15 +58,10 @@ ui <-
         )
       ),
 
-      # - Shiny Panda -
+      # - Blank -
       column(
         width = 4,
-        align = "center",
-        tags$img(
-          src = "logo.png",
-          width = 100,
-          style = "padding-top: 30px; padding-bottom: 30px"
-        )
+        align = "center"
       ),
 
       # - GitHub -
@@ -81,11 +80,21 @@ ui <-
       )
     ),
 
+    # - Logo -
+    fluidRow(
+      align = "center",
+      tags$img(
+        src = "logo.png",
+        width = 150,
+        style = "padding-top: 100px; padding-bottom: 10px"
+      )
+    ),
+
     # - Title -
     fluidRow(
       align = "center",
       tags$h1(
-        style = "font-size: 75px; padding-top: 60px; padding-bottom: 5px;",
+        style = "font-size: 75px; padding-top: 10px; padding-bottom: 5px; width: 80%;",
         "Shiny Panda"
       )
     ),
@@ -94,8 +103,9 @@ ui <-
     fluidRow(
       align = "center",
       tags$h2(
-        style = "padding-top: 0px; padding-bottom: 50px; padding-left: 10px; padding-right: 10px",
-        "Upload a file. Get back a Pandas Profiling report."
+        style = "padding-top: 0px; padding-bottom: 50px; width: 50%",
+        "Upload a file. Get back a Pandas Profiling report. Click the GitHub
+        logo in the top-right corner of the page to learn more."
       )
     ),
 
@@ -104,6 +114,7 @@ ui <-
       align = "center",
       fileInput(
         inputId = "upload",
+        buttonLabel = "Upload...",
         label = NULL,
         accept = c(
           ".csv",
@@ -114,9 +125,9 @@ ui <-
       )
     ),
 
-    # - Download Button -
-    fluidRow(
-      align = "center",
+    # - Invisible download data -
+    conditionalPanel(
+      "false", # always hide the download button
       downloadButton("download")
     )
   )
@@ -124,6 +135,8 @@ ui <-
 # ---- Server ----
 server <-
   function(input, output, session) {
+
+    # Read in data
     data <-
       reactive({
         req(input$upload)
@@ -135,6 +148,14 @@ server <-
           xlsx = read_excel(input$upload$datapath)
         )
       })
+
+    # Observe changes in data(). Trigger download when data changes.
+    observeEvent(
+      data(),
+      {
+        runjs("$('#download')[0].click();")
+      }
+    )
 
     output$download <-
       downloadHandler(
