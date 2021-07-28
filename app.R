@@ -6,8 +6,6 @@ library(readxl)
 library(shinybusy)
 library(shinyjs)
 
-source(".Rprofile")
-
 # Note: Do not load reticulate to prevent a default virtual env being set
 
 # ---- Python ----
