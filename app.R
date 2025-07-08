@@ -21,7 +21,7 @@ if (!(Sys.getenv("VIRTUALENV_NAME") %in% reticulate::virtualenv_list())) {
 
   reticulate::virtualenv_install(
     Sys.getenv("VIRTUALENV_NAME"),
-    packages = "pandas-profiling",
+    packages = "ydata-profiling",
     ignore_installed = TRUE
   )
 }
@@ -133,7 +133,6 @@ ui <-
 # ---- Server ----
 server <-
   function(input, output, session) {
-
     # Read in data
     data <-
       reactive({
@@ -169,7 +168,7 @@ server <-
           # - Generate Pandas Profiling report -
           pandas_profiling <-
             reticulate::import(
-              "pandas_profiling",
+              "ydata_profiling",
               convert = FALSE
             )
 
